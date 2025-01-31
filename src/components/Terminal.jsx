@@ -3,7 +3,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 
-export const TerminalComponent = () => {
+export const TerminalComponent = ({ onClose }) => {
   const terminalRef = useRef(null);
   const fitAddon = new FitAddon();
 
@@ -37,5 +37,21 @@ export const TerminalComponent = () => {
     };
   }, []);
 
-  return <div ref={terminalRef} style={{ width: '100%', height: '100%' }} />;
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-96 bg-black border-t border-gray-700 flex flex-col z-50">
+      {/* Terminal Header */}
+      <div className="flex justify-between items-center p-2 bg-gray-800">
+        <h2 className="text-white text-lg font-semibold">Terminal</h2>
+        <button
+          onClick={onClose}
+          className="text-white hover:text-gray-400"
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Terminal Container */}
+      <div ref={terminalRef} className="flex-1 p-2" />
+    </div>
+  );
 };
