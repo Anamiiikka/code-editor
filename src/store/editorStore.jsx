@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
 
 const STORAGE_KEY = 'editor_state';
-const ENCRYPTION_KEY = 'your-secret-key'; // In production, use environment variables
+const ENCRYPTION_KEY = 'your-secret-key'; // Use environment variables in production
 
 const encryptData = (data) => {
   return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
@@ -35,16 +35,68 @@ export const useEditorStore = create((set, get) => {
     language: persistedState?.language || 'javascript',
     theme: persistedState?.theme || 'vs-dark',
     fontSize: persistedState?.fontSize || 14,
+    openedFolder: null,
+    openedFiles: [],
+    openedFile: null,
 
     setCode: (code) => {
       set({ code });
-      const state = get();
-      const encrypted = encryptData(JSON.stringify(state));
-      localStorage.setItem(STORAGE_KEY, encrypted);
     },
 
     setLanguage: (language) => set({ language }),
     setTheme: (theme) => set({ theme }),
     setFontSize: (fontSize) => set({ fontSize }),
+
+    openFolder: async () => {
+      try {
+        const dirHandle = await window.showDirectoryPicker();
+        const files = [];
+    
+        for await (const entry of dirHandle.values()) {
+          files.push({
+            name: entry.name,
+            path: entry.name, // Only store top-level path
+            handle: entry,
+            isDirectory: entry.kind === 'directory',
+            children: entry.kind === 'directory' ? [] : null, // Empty array for folders, null for files
+          });
+        }
+    
+        set({ openedFolder: dirHandle, openedFiles: files, openedFile: null });
+      } catch (error) {
+        console.error('Error opening folder:', error);
+      }
+    },
+    
+    
+    openFile: async (file) => {
+      if (!file || !file.handle) return;
+
+      try {
+        const fileContent = await file.handle.getFile();
+        const text = await fileContent.text();
+
+        set({ openedFile: file, code: text });
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
+    },
+
+    saveFile: async () => {
+      const { openedFile, code } = get();
+      if (!openedFile || !openedFile.handle) {
+        alert('No file selected!');
+        return;
+      }
+
+      try {
+        const writable = await openedFile.handle.createWritable();
+        await writable.write(code);
+        await writable.close();
+        alert('File saved successfully!');
+      } catch (error) {
+        console.error('Error saving file:', error);
+      }
+    },
   };
 });

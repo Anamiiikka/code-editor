@@ -7,11 +7,12 @@ import {
   Type,
   Braces,
   FileJson,
-  Terminal
+  Terminal,
+  FolderOpen
 } from 'lucide-react';
 
 export const Toolbar = () => {
-  const { language, theme, fontSize, setLanguage, setTheme, setFontSize } = useEditorStore();
+  const { language, theme, fontSize, setLanguage, setTheme, setFontSize, openFolder } = useEditorStore();
 
   const languages = ['javascript', 'typescript', 'python', 'html'];
 
@@ -50,6 +51,14 @@ export const Toolbar = () => {
           max={32}
         />
       </div>
+
+      <button
+        className="flex items-center gap-1 px-3 py-1 rounded bg-yellow-600 hover:bg-yellow-700"
+        onClick={openFolder}
+      >
+        <FolderOpen size={16} />
+        Open Folder
+      </button>
 
       <div className="flex gap-2">
         <button className="flex items-center gap-1 px-3 py-1 rounded bg-blue-600 hover:bg-blue-700">
