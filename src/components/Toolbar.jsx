@@ -7,12 +7,22 @@ import {
   Type,
   Braces,
   FileJson,
-  Terminal,
-  FolderOpen
+  Terminal as TerminalIcon,
+  FolderOpen,
 } from 'lucide-react';
 
 export const Toolbar = () => {
-  const { language, theme, fontSize, setLanguage, setTheme, setFontSize, openFolder } = useEditorStore();
+  const {
+    language,
+    theme,
+    fontSize,
+    setLanguage,
+    setTheme,
+    setFontSize,
+    openFolder,
+    showTerminal,
+    toggleTerminal, // Add this function to the store
+  } = useEditorStore();
 
   const languages = ['javascript', 'typescript', 'python', 'html'];
 
@@ -66,7 +76,7 @@ export const Toolbar = () => {
           Format
         </button>
         <button className="flex items-center gap-1 px-3 py-1 rounded bg-green-600 hover:bg-green-700">
-          <Terminal size={16} />
+          <TerminalIcon size={16} />
           Run
         </button>
         <button className="flex items-center gap-1 px-3 py-1 rounded bg-purple-600 hover:bg-purple-700">
@@ -74,6 +84,15 @@ export const Toolbar = () => {
           AI Assist
         </button>
       </div>
+
+      {/* Add Terminal Toggle Button */}
+      <button
+        className="flex items-center gap-1 px-3 py-1 rounded bg-gray-700 hover:bg-gray-600"
+        onClick={toggleTerminal}
+      >
+        <TerminalIcon size={16} />
+        {showTerminal ? 'Hide Terminal' : 'Show Terminal'}
+      </button>
     </div>
   );
 };

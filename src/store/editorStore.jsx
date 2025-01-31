@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import CryptoJS from 'crypto-js';
 
 const STORAGE_KEY = 'editor_state';
-const ENCRYPTION_KEY = 'your-secret-key'; // Use environment variables in production
+const ENCRYPTION_KEY = 'your-secret-key';
 
 const encryptData = (data) => {
   return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
@@ -38,6 +38,7 @@ export const useEditorStore = create((set, get) => {
     openedFolder: null,
     openedFiles: [],
     openedFile: null,
+    showTerminal: false, // Add this state
 
     setCode: (code) => {
       set({ code });
@@ -47,28 +48,31 @@ export const useEditorStore = create((set, get) => {
     setTheme: (theme) => set({ theme }),
     setFontSize: (fontSize) => set({ fontSize }),
 
+    toggleTerminal: () => {
+      set((state) => ({ showTerminal: !state.showTerminal })); // Toggle terminal visibility
+    },
+
     openFolder: async () => {
       try {
         const dirHandle = await window.showDirectoryPicker();
         const files = [];
-    
+
         for await (const entry of dirHandle.values()) {
           files.push({
             name: entry.name,
-            path: entry.name, // Only store top-level path
+            path: entry.name,
             handle: entry,
             isDirectory: entry.kind === 'directory',
-            children: entry.kind === 'directory' ? [] : null, // Empty array for folders, null for files
+            children: entry.kind === 'directory' ? [] : null,
           });
         }
-    
+
         set({ openedFolder: dirHandle, openedFiles: files, openedFile: null });
       } catch (error) {
         console.error('Error opening folder:', error);
       }
     },
-    
-    
+
     openFile: async (file) => {
       if (!file || !file.handle) return;
 
