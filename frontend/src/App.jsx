@@ -1,24 +1,27 @@
 import React from 'react';
-import { Editor } from './components/Editor';
-import { Toolbar } from './components/Toolbar';
-import { FileExplorer } from './components/FileExplorer';
-import { TerminalComponent } from './components/Terminal'; // Import the terminal
-import { useEditorStore } from './store/editorStore';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './components/Home';
+import IDE from './components/IDE';
+import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+
+// Create a dark theme
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 
 function App() {
-  const { showTerminal, toggleTerminal } = useEditorStore(); // Get terminal state and toggle function
-
   return (
-    <div className="flex h-screen bg-gray-900">
-      <FileExplorer />
-      <div className="flex flex-col flex-1">
-        <Toolbar />
-        <Editor />
-        {showTerminal && ( // Conditionally render the terminal as a pop-up window
-          <TerminalComponent onClose={toggleTerminal} />
-        )}
-      </div>
-    </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/ide/:projectId/:fileName" element={<IDE />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
