@@ -6,6 +6,7 @@ import {
   IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Drawer, Toolbar, AppBar, Fab, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { Add, Delete, Folder, Code, Menu as MenuIcon } from '@mui/icons-material';
+import { useAuth0 } from '@auth0/auth0-react'; // Import Auth0 hook
 
 function Home() {
   const [projectName, setProjectName] = useState('');
@@ -19,12 +20,19 @@ function Home() {
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch all projects on component mount
+  // Auth0 hook
+  const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
+
+  // Fetch all projects for the authenticated user
   useEffect(() => {
-    axios.get('http://localhost:5000/api/projects').then((response) => {
-      setProjects(response.data);
-    });
-  }, []);
+    if (isAuthenticated && user) {
+      axios.get('http://localhost:5000/api/projects', {
+        params: { userId: user.sub } // Send Auth0 user ID to fetch projects
+      }).then((response) => {
+        setProjects(response.data);
+      });
+    }
+  }, [isAuthenticated, user]);
 
   // Fetch files for the selected project
   useEffect(() => {
@@ -37,7 +45,15 @@ function Home() {
 
   // Create a new project
   const createProject = async () => {
-    const response = await axios.post('http://localhost:5000/api/projects', { projectName });
+    if (!isAuthenticated || !user) {
+      alert('You must be logged in to create a project.');
+      return;
+    }
+
+    const response = await axios.post('http://localhost:5000/api/projects', {
+      projectName,
+      userId: user.sub // Associate project with the authenticated user
+    });
     setProjects([...projects, response.data]);
     setProjectName('');
     setCreateProjectDialogOpen(false); // Close the dialog
@@ -53,7 +69,11 @@ function Home() {
   // Create a new file in the selected project
   const createFile = async () => {
     const fullFileName = `${fileName}.${fileType}`;
-    await axios.post('http://localhost:5000/api/files', { projectId: selectedProject.projectId, fileName: fullFileName, content: '' });
+    await axios.post('http://localhost:5000/api/files', {
+      projectId: selectedProject.projectId,
+      fileName: fullFileName,
+      content: ''
+    });
     setFiles([...files, fullFileName]);
     setFileName('');
     setAnchorEl(null); // Close the dropdown
@@ -78,9 +98,26 @@ function Home() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Web IDE
           </Typography>
+
+          {/* Auth0 Login/Logout Buttons */}
+          {!isAuthenticated && (
+            <Button color="inherit" onClick={() => loginWithRedirect()}>
+              Log In
+            </Button>
+          )}
+          {isAuthenticated && (
+            <>
+              <Typography variant="body1" sx={{ mr: 2 }}>
+                Welcome, {user.name}!
+              </Typography>
+              <Button color="inherit" onClick={() => logout()}>
+                Log Out
+              </Button>
+            </>
+          )}
         </Toolbar>
       </AppBar>
 
