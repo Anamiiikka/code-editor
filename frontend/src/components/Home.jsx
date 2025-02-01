@@ -163,17 +163,18 @@ function Home() {
           <List>
             {projects.map((project) => (
               <ListItem
-                key={project.projectId}
-                button
-                onClick={() => setSelectedProject(project)}
-                selected={selectedProject?.projectId === project.projectId}
-              >
-                <Folder style={{ marginRight: '8px' }} />
-                <ListItemText primary={project.projectName} />
-                <IconButton onClick={() => deleteProject(project.projectId)}>
-                  <Delete />
-                </IconButton>
-              </ListItem>
+              key={project.projectId}
+              
+              onClick={() => setSelectedProject(project)}
+              selected={selectedProject?.projectId === project.projectId}
+            >
+              <Folder style={{ marginRight: '8px' }} />
+              <ListItemText primary={project.projectName} />
+              <IconButton onClick={() => deleteProject(project.projectId)}>
+                <Delete />
+              </IconButton>
+            </ListItem>
+            
             ))}
           </List>
         </Box>
