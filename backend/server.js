@@ -3,9 +3,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-const fs = require('fs');
+const AWS = require('aws-sdk');
+require('dotenv').config();
 const { exec } = require('child_process');
+const path = require('path');
+const projectsDir = path.join(__dirname, 'projects');
+const fs = require('fs');
+
+
 
 const app = express();
 const PORT = 5000;
@@ -14,67 +19,54 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB Connection
-const mongoURI = 'mongodb+srv://codedpool10:fHgJNh67CGV3qokG@cluster0.d0sfb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/web-ide';
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully!'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+// Initialize AWS S3
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 // Mongoose Models
 const User = require('./models/User');
 const Project = require('./models/Project');
 
-// Ensure projects directory exists
-const projectsDir = path.join(__dirname, 'projects');
-if (!fs.existsSync(projectsDir)) {
-  fs.mkdirSync(projectsDir, { recursive: true });
-}
-
-// Helper function to read project metadata
-const readProjectMetadata = (projectId) => {
-  const metadataPath = path.join(projectsDir, projectId, 'metadata.json');
-  if (fs.existsSync(metadataPath)) {
-    return JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-  }
-  return null;
-};
-
 // API to create a new project
 app.post('/api/projects', async (req, res) => {
-    const { projectName, auth0Id, email } = req.body; // Add email to the request body
-  
-    if (!projectName || !auth0Id || !email) {
-      return res.status(400).json({ error: 'Project name, user ID, and email are required!' });
-    }
-  
-    try {
-      // Find or create the user
-      let user = await User.findOne({ auth0Id });
-      if (!user) {
-        user = new User({ auth0Id, email }); // Use the email from Auth0
-        await user.save();
-      }
-  
-      // Create the project
-      const projectId = uuidv4();
-      const projectPath = path.join(projectsDir, projectId);
-      fs.mkdirSync(projectPath);
-  
-      const metadata = { projectId, projectName, userId: user._id };
-      fs.writeFileSync(path.join(projectPath, 'metadata.json'), JSON.stringify(metadata));
-  
-      const project = new Project({ projectId, projectName, userId: user._id });
-      await project.save();
-  
-      // Add the project to the user's projects array
-      user.projects.push(project._id);
+  const { projectName, auth0Id, email } = req.body;
+
+  if (!projectName || !auth0Id || !email) {
+    return res.status(400).json({ error: 'Project name, user ID, and email are required!' });
+  }
+
+  try {
+    // Find or create the user
+    let user = await User.findOne({ auth0Id });
+    if (!user) {
+      user = new User({ auth0Id, email });
       await user.save();
-  
-      res.status(201).json(metadata);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to create project' });
     }
-  });
+
+    // Create the project
+    const projectId = uuidv4();
+    const project = new Project({ projectId, projectName, userId: user._id });
+    await project.save();
+
+    // Add the project to the user's projects array
+    user.projects.push(project._id);
+    await user.save();
+
+    // Return the project metadata
+    res.status(201).json({ projectId, projectName, userId: user._id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create project' });
+  }
+});
 
 // API to list all projects for a user
 app.get('/api/projects', async (req, res) => {
@@ -117,10 +109,19 @@ app.delete('/api/projects/:projectId', async (req, res) => {
     // Delete the project from the database
     await Project.deleteOne({ projectId });
 
-    // Delete the project directory
-    const projectPath = path.join(projectsDir, projectId);
-    if (fs.existsSync(projectPath)) {
-      fs.rmdirSync(projectPath, { recursive: true });
+    // Delete all files in the project from S3
+    const listParams = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Prefix: `${projectId}/`,
+    };
+
+    const listedObjects = await s3.listObjectsV2(listParams).promise();
+    if (listedObjects.Contents.length > 0) {
+      const deleteParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })) },
+      };
+      await s3.deleteObjects(deleteParams).promise();
     }
 
     res.status(200).json({ message: 'Project deleted successfully!' });
@@ -139,15 +140,20 @@ app.post('/api/files', async (req, res) => {
   }
 
   try {
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${projectId}/${fileName}`,
+      Body: content || '',
+    };
+
+    await s3.upload(params).promise();
+
+    // Update the project's files array in MongoDB
     const project = await Project.findOne({ projectId });
     if (!project) {
       return res.status(404).json({ error: 'Project not found!' });
     }
 
-    const filePath = path.join(projectsDir, projectId, fileName);
-    fs.writeFileSync(filePath, content || '');
-
-    // Add the file to the project's files array
     project.files.push({ fileName, content });
     await project.save();
 
@@ -159,16 +165,21 @@ app.post('/api/files', async (req, res) => {
 });
 
 // API to get file content
-app.get('/api/files/:projectId/:fileName', (req, res) => {
+app.get('/api/files/:projectId/:fileName', async (req, res) => {
   const { projectId, fileName } = req.params;
-  const filePath = path.join(projectsDir, projectId, fileName);
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found!' });
+  try {
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${projectId}/${fileName}`,
+    };
+
+    const data = await s3.getObject(params).promise();
+    res.status(200).json({ content: data.Body.toString('utf-8') });
+  } catch (error) {
+    console.error(error);
+    res.status(404).json({ error: 'File not found!' });
   }
-
-  const content = fs.readFileSync(filePath, 'utf-8');
-  res.status(200).json({ content });
 });
 
 // API to delete a file
@@ -176,19 +187,19 @@ app.delete('/api/files/:projectId/:fileName', async (req, res) => {
   const { projectId, fileName } = req.params;
 
   try {
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${projectId}/${fileName}`,
+    };
+
+    await s3.deleteObject(params).promise();
+
+    // Remove the file from the project's files array in MongoDB
     const project = await Project.findOne({ projectId });
     if (!project) {
       return res.status(404).json({ error: 'Project not found!' });
     }
 
-    const filePath = path.join(projectsDir, projectId, fileName);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found!' });
-    }
-
-    fs.unlinkSync(filePath);
-
-    // Remove the file from the project's files array
     project.files = project.files.filter((file) => file.fileName !== fileName);
     await project.save();
 
@@ -203,6 +214,9 @@ app.delete('/api/files/:projectId/:fileName', async (req, res) => {
 app.post('/api/run', (req, res) => {
   const { projectId, fileName, input } = req.body;
   const filePath = path.join(projectsDir, projectId, fileName);
+
+  // Log file path for debugging
+  console.log("File Path:", filePath);
 
   if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found!' });
@@ -235,6 +249,7 @@ app.post('/api/run', (req, res) => {
       res.status(200).json({ output: stdout });
   });
 });
+
 
 
 app.listen(PORT, () => {

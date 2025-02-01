@@ -34,19 +34,9 @@ function Home() {
   }, [isAuthenticated, user]);
 
   // Fetch files for the selected project
-  const fetchFiles = async (projectId) => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/files/${projectId}`);
-      setFiles(response.data);
-    } catch (error) {
-      console.error('Failed to fetch files:', error);
-    }
-  };
-
-  // Update files when selectedProject changes
   useEffect(() => {
     if (selectedProject) {
-      fetchFiles(selectedProject.projectId);
+      setFiles(selectedProject.files);
     }
   }, [selectedProject]);
 
@@ -57,40 +47,70 @@ function Home() {
       return;
     }
 
-    const response = await axios.post('http://localhost:5000/api/projects', {
-      projectName,
-      auth0Id: user.sub, // Pass Auth0 user ID
-      email: user.email, // Pass Auth0 email
-    });
-    setProjects([...projects, response.data]);
-    setProjectName('');
-    setCreateProjectDialogOpen(false);
+    try {
+      const response = await axios.post('http://localhost:5000/api/projects', {
+        projectName,
+        auth0Id: user.sub,
+        email: user.email,
+      });
+
+      setProjects([...projects, response.data]);
+      setProjectName('');
+      setCreateProjectDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to create project');
+    }
   };
 
   // Delete a project
   const deleteProject = async (projectId) => {
-    await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
-    setProjects(projects.filter((project) => project.projectId !== projectId));
-    setSelectedProject(null);
+    try {
+      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+      setProjects(projects.filter((project) => project.projectId !== projectId));
+      setSelectedProject(null);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete project');
+    }
   };
 
   // Create a new file in the selected project
   const createFile = async () => {
     const fullFileName = `${fileName}.${fileType}`;
-    await axios.post('http://localhost:5000/api/files', {
-      projectId: selectedProject.projectId,
-      fileName: fullFileName,
-      content: ''
-    });
-    setFiles([...files, fullFileName]);
-    setFileName('');
-    setAnchorEl(null);
+    // Check if the file already exists
+    const existingFile = files.find((file) => file.fileName === fullFileName);
+    if (existingFile) {
+      alert('File already exists!');
+      return;  // Stop if file already exists
+    }
+  
+    try {
+      await axios.post('http://localhost:5000/api/files', {
+        projectId: selectedProject.projectId,
+        fileName: fullFileName,
+        content: '',
+      });
+  
+      setFiles([...files, { fileName: fullFileName, content: '' }]);
+      setFileName('');
+      setAnchorEl(null);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to create file');
+    }
   };
+  
 
   // Delete a file
   const deleteFile = async (file) => {
-    await axios.delete(`http://localhost:5000/api/files/${selectedProject.projectId}/${file}`);
-    setFiles(files.filter((f) => f !== file));
+    try {
+      await axios.delete(`http://localhost:5000/api/files/${selectedProject.projectId}/${file.fileName}`);
+      setFiles(files.filter((f) => f.fileName !== file.fileName));
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete file');
+    }
   };
 
   return (
@@ -208,15 +228,15 @@ function Home() {
 
             <Grid container spacing={2}>
               {files.map((file) => (
-                <Grid item key={file} xs={12} sm={6} md={4}>
+                <Grid item key={file.fileName} xs={12} sm={6} md={4}>
                   <Paper
                     elevation={3}
                     style={{ padding: '16px', cursor: 'pointer' }}
-                    onClick={() => navigate(`/ide/${selectedProject.projectId}/${file}`)}
+                    onClick={() => navigate(`/ide/${selectedProject.projectId}/${file.fileName}`)}
                   >
                     <Box display="flex" alignItems="center" gap={2}>
                       <Code />
-                      <Typography>{file}</Typography>
+                      <Typography>{file.fileName}</Typography>
                       <IconButton onClick={(e) => { e.stopPropagation(); deleteFile(file); }}>
                         <Delete />
                       </IconButton>
