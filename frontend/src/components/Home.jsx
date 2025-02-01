@@ -22,10 +22,12 @@ function Home() {
 
   const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
   // Fetch all projects for the authenticated user
   useEffect(() => {
     if (isAuthenticated && user) {
-      axios.get('http://localhost:5000/api/projects', {
+      axios.get(`${backendUrl}/api/projects`, {
         params: { auth0Id: user.sub }
       }).then((response) => {
         setProjects(response.data);
@@ -48,7 +50,7 @@ function Home() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/projects', {
+      const response = await axios.post(`${backendUrl}/api/projects`, {
         projectName,
         auth0Id: user.sub,
         email: user.email,
@@ -66,7 +68,7 @@ function Home() {
   // Delete a project
   const deleteProject = async (projectId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+      await axios.delete(`${backendUrl}/api/projects/${projectId}`);
       setProjects(projects.filter((project) => project.projectId !== projectId));
       setSelectedProject(null);
     } catch (error) {
@@ -87,7 +89,7 @@ function Home() {
     }
   
     try {
-      await axios.post('http://localhost:5000/api/files', {
+      await axios.post(`${backendUrl}/api/files`, {
         projectId: selectedProject.projectId,
         fileName: fullFileName,
         content: '',
@@ -105,7 +107,7 @@ function Home() {
   // Delete a file
   const deleteFile = async (file) => {
     try {
-      await axios.delete(`http://localhost:5000/api/files/${selectedProject.projectId}/${file.fileName}`);
+      await axios.delete(`${backendUrl}/api/files/${selectedProject.projectId}/${file.fileName}`);
       setFiles(files.filter((f) => f.fileName !== file.fileName));
     } catch (error) {
       console.error(error);

@@ -18,6 +18,8 @@ self.MonacoEnvironment = {
   },
 };
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
 // Language Mapping for Proper Syntax Highlighting
 const languageMap = {
   js: 'javascript',
@@ -55,7 +57,7 @@ function IDE() {
 
   // Fetch file content when the component mounts
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/files/${projectId}/${fileName}`)
+    axios.get(`${backendUrl}/api/files/${projectId}/${fileName}`)
       .then((response) => setCode(response.data.content))
       .catch((error) => console.error('Error fetching file:', error));
   }, [projectId, fileName]);
@@ -63,7 +65,7 @@ function IDE() {
   // Save file content
   const saveFile = async () => {
     try {
-      await axios.post('http://localhost:5000/api/files', { projectId, fileName, content: code });
+      await axios.post(`${backendUrl}/api/files`, { projectId, fileName, content: code });
       console.log('File saved successfully');
     } catch (error) {
       console.error('Error saving file:', error);
@@ -75,7 +77,7 @@ function IDE() {
     setIsRunning(true);
     try {
       await saveFile(); // Save before running
-      const response = await axios.post('http://localhost:5000/api/run', { projectId, fileName, input });
+      const response = await axios.post(`${backendUrl}/api/run`, { projectId, fileName, input });
       setOutput(response.data.output);
     } catch (error) {
       setOutput(error.response?.data?.error || 'Failed to run code');
