@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = 5000;
@@ -197,6 +198,44 @@ app.delete('/api/files/:projectId/:fileName', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete file' });
   }
 });
+
+// API to run code
+app.post('/api/run', (req, res) => {
+  const { projectId, fileName, input } = req.body;
+  const filePath = path.join(projectsDir, projectId, fileName);
+
+  if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found!' });
+  }
+
+  const extension = path.extname(fileName);
+  let command = '';
+
+  switch (extension) {
+      case '.cpp':
+          command = `g++ ${filePath} -o ${filePath}.out && echo "${input}" | ${filePath}.out`;
+          break;
+      case '.java':
+          command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(fileName, '.java')}`;
+          break;
+      case '.py':
+          command = `echo "${input}" | python3 ${filePath}`;
+          break;
+      case '.js':
+          command = `echo "${input}" | node ${filePath}`;
+          break;
+      default:
+          return res.status(400).json({ error: 'Unsupported file type!' });
+  }
+
+  exec(command, (error, stdout, stderr) => {
+      if (error) {
+          return res.status(500).json({ error: stderr });
+      }
+      res.status(200).json({ output: stdout });
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
