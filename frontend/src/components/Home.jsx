@@ -78,11 +78,12 @@ function Home() {
   // Create a new file in the selected project
   const createFile = async () => {
     const fullFileName = `${fileName}.${fileType}`;
+  
     // Check if the file already exists
     const existingFile = files.find((file) => file.fileName === fullFileName);
     if (existingFile) {
       alert('File already exists!');
-      return;  // Stop if file already exists
+      return; // Stop if file already exists
     }
   
     try {
@@ -99,8 +100,7 @@ function Home() {
       console.error(error);
       alert('Failed to create file');
     }
-  };
-  
+  };  
 
   // Delete a file
   const deleteFile = async (file) => {
