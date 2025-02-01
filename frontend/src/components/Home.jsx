@@ -6,7 +6,7 @@ import {
   IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Drawer, Toolbar, AppBar, Fab, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { Add, Delete, Folder, Code, Menu as MenuIcon } from '@mui/icons-material';
-import { useAuth0 } from '@auth0/auth0-react'; // Import Auth0 hook
+import { useAuth0 } from '@auth0/auth0-react';
 
 function Home() {
   const [projectName, setProjectName] = useState('');
@@ -20,14 +20,13 @@ function Home() {
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Auth0 hook
   const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
 
   // Fetch all projects for the authenticated user
   useEffect(() => {
     if (isAuthenticated && user) {
       axios.get('http://localhost:5000/api/projects', {
-        params: { userId: user.sub } // Send Auth0 user ID to fetch projects
+        params: { auth0Id: user.sub }
       }).then((response) => {
         setProjects(response.data);
       });
@@ -49,16 +48,16 @@ function Home() {
       alert('You must be logged in to create a project.');
       return;
     }
-
+  
     const response = await axios.post('http://localhost:5000/api/projects', {
       projectName,
-      userId: user.sub // Associate project with the authenticated user
+      auth0Id: user.sub, // Pass Auth0 user ID
+      email: user.email, // Pass Auth0 email
     });
     setProjects([...projects, response.data]);
     setProjectName('');
-    setCreateProjectDialogOpen(false); // Close the dialog
+    setCreateProjectDialogOpen(false);
   };
-
   // Delete a project
   const deleteProject = async (projectId) => {
     await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
@@ -76,7 +75,7 @@ function Home() {
     });
     setFiles([...files, fullFileName]);
     setFileName('');
-    setAnchorEl(null); // Close the dropdown
+    setAnchorEl(null);
   };
 
   // Delete a file
@@ -130,7 +129,7 @@ function Home() {
           [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
         }}
       >
-        <Toolbar /> {/* Empty Toolbar to offset content below AppBar */}
+        <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
           <List>
             {projects.map((project) => (
@@ -153,7 +152,7 @@ function Home() {
 
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar /> {/* Empty Toolbar to offset content below AppBar */}
+        <Toolbar />
         {selectedProject && (
           <>
             <Box mb={2} display="flex" alignItems="center" gap={2}>
