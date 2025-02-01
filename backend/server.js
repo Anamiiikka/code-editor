@@ -213,57 +213,57 @@ app.delete('/api/files/:projectId/:fileName', async (req, res) => {
   }
 });
 
-// API to run code
 app.post('/api/run', async (req, res) => {
   const { projectId, fileName, input } = req.body;
 
   try {
-    // Fetch the file content from S3
-    const params = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${projectId}/${fileName}`,
-    };
+      const params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `${projectId}/${fileName}`,
+      };
 
-    const data = await s3.getObject(params).promise();
-    const fileContent = data.Body.toString('utf-8');
+      const data = await s3.getObject(params).promise();
+      const fileContent = data.Body.toString('utf-8');
 
-    // Save the file content temporarily to the local filesystem
-    const filePath = path.join(projectsDir, projectId, fileName);
-    fs.mkdirSync(path.dirname(filePath), { recursive: true }); // Ensure the directory exists
-    fs.writeFileSync(filePath, fileContent);
+      const filePath = path.join(projectsDir, projectId, fileName);
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, fileContent);
 
-    // Execute the file
-    const extension = path.extname(fileName);
-    let command = '';
+      const extension = path.extname(fileName);
+      let command = '';
 
-    switch (extension) {
-      case '.cpp':
-        command = `g++ ${filePath} -o ${filePath}.out && echo "${input}" | ${filePath}.out`;
-        break;
-      case '.java':
-        command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(fileName, '.java')}`;
-        break;
-      case '.py':
-        command = `echo "${input}" | python3 ${filePath}`;
-        break;
-      case '.js':
-        command = `echo "${input}" | node ${filePath}`;
-        break;
-      default:
-        return res.status(400).json({ error: 'Unsupported file type!' });
-    }
-
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        return res.status(500).json({ error: stderr });
+      switch (extension) {
+          case '.cpp':
+              command = `g++ ${filePath} -o ${filePath}.out && ${filePath}.out`;
+              break;
+          case '.java':
+              command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(fileName, '.java')}`;
+              break;
+          case '.py':
+              command = `python3 ${filePath}`;
+              break;
+          case '.js':
+              command = `node ${filePath}`;
+              break;
+          default:
+              return res.status(400).json({ error: 'Unsupported file type!' });
       }
-      res.status(200).json({ output: stdout });
-    });
+
+      const child = exec(command, (error, stdout, stderr) => {
+          if (error) {
+              return res.status(500).json({ error: stderr });
+          }
+          res.status(200).json({ output: stdout });
+      });
+
+      child.stdin.write(input + "\n");
+      child.stdin.end();
   } catch (error) {
-    console.error(error);
-    res.status(404).json({ error: 'File not found!' });
+      console.error(error);
+      res.status(404).json({ error: 'File not found!' });
   }
 });
+
 
 // Start the server
 app.listen(PORT, () => {

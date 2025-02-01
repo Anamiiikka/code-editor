@@ -187,7 +187,10 @@ function IDE() {
           multiline
           rows={4}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            console.log("User Input:", e.target.value); // Debugging line
+            setInput(e.target.value);
+          }}
           fullWidth
           margin="normal"
         />
