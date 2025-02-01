@@ -34,11 +34,19 @@ function Home() {
   }, [isAuthenticated, user]);
 
   // Fetch files for the selected project
+  const fetchFiles = async (projectId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/files/${projectId}`);
+      setFiles(response.data);
+    } catch (error) {
+      console.error('Failed to fetch files:', error);
+    }
+  };
+
+  // Update files when selectedProject changes
   useEffect(() => {
     if (selectedProject) {
-      axios.get(`http://localhost:5000/api/files/${selectedProject.projectId}`).then((response) => {
-        setFiles(response.data);
-      });
+      fetchFiles(selectedProject.projectId);
     }
   }, [selectedProject]);
 
@@ -48,7 +56,7 @@ function Home() {
       alert('You must be logged in to create a project.');
       return;
     }
-  
+
     const response = await axios.post('http://localhost:5000/api/projects', {
       projectName,
       auth0Id: user.sub, // Pass Auth0 user ID
@@ -58,6 +66,7 @@ function Home() {
     setProjectName('');
     setCreateProjectDialogOpen(false);
   };
+
   // Delete a project
   const deleteProject = async (projectId) => {
     await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
