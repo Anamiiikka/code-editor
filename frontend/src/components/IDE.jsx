@@ -1,45 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import MonacoEditor from '@monaco-editor/react';
+import CodeMirror from '@uiw/react-codemirror';
+import { javascript } from '@codemirror/lang-javascript';
+import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
+import { cpp } from '@codemirror/lang-cpp';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { json } from '@codemirror/lang-json';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { autocompletion } from '@codemirror/autocomplete';
 import { Button, TextField, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { Save, PlayArrow } from '@mui/icons-material';
-import * as monaco from 'monaco-editor';
 import './IDE.css';
-
-// Web Worker Setup for Monaco Editor (Ensures Code Suggestions Work)
-self.MonacoEnvironment = {
-  getWorker(_, label) {
-    if (label === 'json') return new Worker(new URL('monaco-editor/esm/vs/language/json/json.worker', import.meta.url));
-    if (label === 'css' || label === 'scss' || label === 'less') return new Worker(new URL('monaco-editor/esm/vs/language/css/css.worker', import.meta.url));
-    if (label === 'html' || label === 'handlebars' || label === 'razor') return new Worker(new URL('monaco-editor/esm/vs/language/html/html.worker', import.meta.url));
-    if (label === 'typescript' || label === 'javascript') return new Worker(new URL('monaco-editor/esm/vs/language/typescript/ts.worker', import.meta.url));
-    return new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker', import.meta.url));
-  },
-};
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 // Language Mapping for Proper Syntax Highlighting
 const languageMap = {
-  js: 'javascript',
-  ts: 'typescript',
-  py: 'python',
-  java: 'java',
-  cpp: 'cpp',
-  c: 'c',
-  html: 'html',
-  css: 'css',
-  json: 'json',
-  md: 'markdown',
-  txt: 'plaintext',
+  js: javascript(),
+  ts: javascript(),
+  py: python(),
+  java: java(),
+  cpp: cpp(),
+  c: cpp(),
+  html: html(),
+  css: css(),
+  json: json(),
+  md: html(), // Markdown can use HTML highlighting
+  txt: null, // Plaintext (no syntax highlighting)
 };
 
 // Editor Themes
 const themes = [
-  { value: 'vs', label: 'Light' },
-  { value: 'vs-dark', label: 'Dark' },
-  { value: 'hc-black', label: 'High Contrast' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'oneDark', label: 'One Dark' },
 ];
 
 function IDE() {
@@ -48,12 +45,11 @@ function IDE() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
-  const [theme, setTheme] = useState('vs-dark'); // Default theme
+  const [theme, setTheme] = useState('oneDark'); // Default theme
   const editorRef = useRef(null);
-  const monacoRef = useRef(null);
 
   const fileExtension = fileName.split('.').pop();
-  const language = languageMap[fileExtension] || 'plaintext';
+  const language = languageMap[fileExtension] || null;
 
   // Fetch file content when the component mounts
   useEffect(() => {
@@ -86,33 +82,6 @@ function IDE() {
     }
   };
 
-  // Handle editor mount
-  const handleEditorDidMount = (editor, monaco) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-
-    // Configure TypeScript/JavaScript language defaults
-    if (language === 'javascript' || language === 'typescript') {
-      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: false,
-        noSyntaxValidation: false,
-      });
-      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES6,
-        allowNonTsExtensions: true,
-        allowJs: true,
-        checkJs: true,
-      });
-    }
-
-    // Listen for errors in the editor
-    const model = editor.getModel();
-    model.onDidChangeContent(() => {
-      const markers = monaco.editor.getModelMarkers({ resource: model.uri });
-      console.log('Errors:', markers); // Log errors to the console (optional)
-    });
-  };
-
   // Handle theme change
   const handleThemeChange = (event) => {
     setTheme(event.target.value);
@@ -134,33 +103,21 @@ function IDE() {
             </Select>
           </FormControl>
         </Box>
-        <MonacoEditor
-          height="calc(100vh - 220px)"
-          language={language}
+        <CodeMirror
+          ref={editorRef}
           value={code}
-          onChange={(value) => setCode(value || '')}
-          theme={theme}
-          options={{
-            fontSize: 14,
-            automaticLayout: true,
-            minimap: { enabled: true }, // Enable minimap
-            wordWrap: 'on',
-            lineNumbers: 'on',
-            bracketPairColorization: { enabled: true },
-            autoClosingBrackets: 'always',
-            autoIndent: 'full',
-            suggest: { showWords: true },
-            quickSuggestions: true,
-            parameterHints: { enabled: true },
-            wordBasedSuggestions: true,
-            formatOnType: true,
-            formatOnPaste: true,
-            glyphMargin: true, // Enable glyph margin for error indicators
-            lightbulb: { enabled: true }, // Enable lightbulb for code actions
-            overviewRulerLanes: 3, // Show errors in the overview ruler
-            renderValidationDecorations: 'on', // Show validation decorations
+          height="calc(100vh - 220px)"
+          extensions={[language, autocompletion()].filter(Boolean)} 
+          theme={theme === 'oneDark' ? oneDark : theme}
+          onChange={(value) => setCode(value)}
+          basicSetup={{
+            lineNumbers: true,
+            highlightActiveLine: true,
+            bracketMatching: true,
+            closeBrackets: true,
+            autocompletion: true,
+            syntaxHighlighting: true,
           }}
-          onMount={handleEditorDidMount}
         />
         <Box className="button-container">
           <Button variant="contained" color="primary" startIcon={<Save />} onClick={saveFile}>
