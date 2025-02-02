@@ -46,6 +46,10 @@ function IDE() {
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [theme, setTheme] = useState('oneDark'); // Default theme
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiFixes, setAiFixes] = useState('');
+  const [aiDocs, setAiDocs] = useState('');
+  const [snippetDescription, setSnippetDescription] = useState('');
   const editorRef = useRef(null);
 
   const fileExtension = fileName.split('.').pop();
@@ -82,10 +86,66 @@ function IDE() {
     }
   };
 
+  // Fetch AI Auto-Completion Suggestions
+  const fetchAutoCompleteSuggestions = async (code) => {
+    try {
+      const response = await axios.post(`${backendUrl}/api/ai/auto-complete`, { code });
+      setAiSuggestions(response.data.suggestions);
+    } catch (error) {
+      console.error('Error fetching AI suggestions:', error);
+    }
+  };
+
+  // Fetch AI Linting Fixes
+  const fetchAiFixes = async () => {
+    try {
+      const response = await axios.post(`${backendUrl}/api/ai/lint`, { code });
+      setAiFixes(response.data.fixes);
+    } catch (error) {
+      console.error('Error fetching AI fixes:', error);
+    }
+  };
+
+  // Generate AI Documentation
+  const generateAiDocs = async () => {
+    try {
+      const response = await axios.post(`${backendUrl}/api/ai/generate-docs`, { code });
+      setAiDocs(response.data.docs);
+    } catch (error) {
+      console.error('Error generating AI docs:', error);
+    }
+  };
+
+  // Generate AI Code Snippet
+  const generateAiSnippet = async () => {
+    try {
+      const response = await axios.post(`${backendUrl}/api/ai/generate-snippet`, {
+        description: snippetDescription,
+      });
+      setCode(code + '\n' + response.data.snippet);
+    } catch (error) {
+      console.error('Error generating AI snippet:', error);
+    }
+  };
+
   // Handle theme change
   const handleThemeChange = (event) => {
     setTheme(event.target.value);
   };
+
+  // AI Auto-Completion Extension
+  const aiAutocompletion = autocompletion({
+    override: [
+      async (context) => {
+        const code = context.state.doc.toString();
+        await fetchAutoCompleteSuggestions(code);
+        return {
+          from: context.pos,
+          options: aiSuggestions.map((suggestion) => ({ label: suggestion, type: 'text' })),
+        };
+      },
+    ],
+  });
 
   return (
     <Box className="ide-container">
@@ -107,7 +167,7 @@ function IDE() {
           ref={editorRef}
           value={code}
           height="calc(100vh - 220px)"
-          extensions={[language, autocompletion()].filter(Boolean)} 
+          extensions={[language, aiAutocompletion].filter(Boolean)}
           theme={theme === 'oneDark' ? oneDark : theme}
           onChange={(value) => setCode(value)}
           basicSetup={{
@@ -132,6 +192,19 @@ function IDE() {
           >
             {isRunning ? 'Running...' : 'Run Code'}
           </Button>
+          <Button onClick={fetchAiFixes}>AI Lint</Button>
+          <Button onClick={generateAiDocs}>Generate Docs</Button>
+          <TextField
+            label="Describe the code snippet you need"
+            variant="outlined"
+            multiline
+            rows={2}
+            value={snippetDescription}
+            onChange={(e) => setSnippetDescription(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Button onClick={generateAiSnippet}>Generate Snippet</Button>
         </Box>
       </Box>
 
@@ -146,10 +219,7 @@ function IDE() {
           multiline
           rows={4}
           value={input}
-          onChange={(e) => {
-            console.log("User Input:", e.target.value); // Debugging line
-            setInput(e.target.value);
-          }}
+          onChange={(e) => setInput(e.target.value)}
           fullWidth
           margin="normal"
         />
@@ -159,6 +229,22 @@ function IDE() {
         <Paper elevation={3} className="output-paper">
           <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
             {output}
+          </Typography>
+        </Paper>
+        <Typography variant="h6" gutterBottom>
+          AI Linting Fixes
+        </Typography>
+        <Paper elevation={3} className="ai-output-paper">
+          <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
+            {aiFixes}
+          </Typography>
+        </Paper>
+        <Typography variant="h6" gutterBottom>
+          AI Documentation
+        </Typography>
+        <Paper elevation={3} className="ai-output-paper">
+          <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
+            {aiDocs}
           </Typography>
         </Paper>
       </Box>
