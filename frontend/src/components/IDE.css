@@ -44,3 +44,23 @@
   height: calc(100vh - 220px);
   overflow-y: auto;
 }
+
+.ide-container {
+  display: flex;
+  height: 100vh;
+}
+
+.editor-container {
+  flex: 1;
+  padding: 16px;
+}
+
+.output-container {
+  flex: 1;
+  padding: 16px;
+}
+
+.ai-output-paper {
+  padding: 16px;
+  margin-bottom: 16px;
+}
