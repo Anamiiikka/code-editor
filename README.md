@@ -1,7 +1,7 @@
 
 ---
 
-# Codev - Collaborative Code Editor
+# Codev - Collaborative Code Editor <>
 
 Codev is a collaborative code editor designed to provide developers with a seamless coding experience. It includes features such as real-time collaboration, AI-powered code assistance, file management, and code execution.
 
