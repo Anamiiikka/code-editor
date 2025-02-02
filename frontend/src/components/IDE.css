@@ -1,7 +1,7 @@
 /* Global Styles */
 :root {
-  --bg-color: #1e1e1e; /* Dark background */
-  --text-color: #d4d4d4; /* Light text */
+  --bg-color: #00000; /* Dark background */
+  --text-color: #fff; /* Light text */
   --accent-color: #007acc; /* Accent color for buttons and highlights */
   --hover-color: #005a9c; /* Hover color for buttons */
   --border-color: #333; /* Border color for containers */
@@ -131,6 +131,7 @@ body {
 
 .ai-sidebar p {
   color: var(--text-color);
+  height: auto;
 }
 
 /* Scrollbars */

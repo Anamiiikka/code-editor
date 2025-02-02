@@ -75,7 +75,7 @@ function CodeEditor({ code, setCode, aiSuggestions, setAiSuggestions, fileExtens
   });
 
   return (
-    <Box className="code-editor" sx={{ padding: '16px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+    <Box className="code-editor" sx={{ padding: '16px', backgroundColor: '#000000', borderRadius: '8px' }}>
       {/* Theme Selector */}
       <FormControl fullWidth sx={{ marginBottom: '16px' }}>
         <InputLabel id="theme-selector-label">Editor Theme</InputLabel>

@@ -13,7 +13,7 @@ import { styled } from '@mui/system';
 // Styled Components for Enhanced UI
 const OutputContainer = styled(Box)(({ theme }) => ({
   padding: '16px',
-  backgroundColor: '#f9f9f9',
+  backgroundColor: '#000000',
   borderRadius: '8px',
   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
 }));
@@ -68,7 +68,7 @@ function OutputArea({ input, setInput, output }) {
   return (
     <OutputContainer>
       {/* Input Section */}
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '##4ec9b0' }}>
         Input
       </Typography>
       <StyledTextField
@@ -84,7 +84,7 @@ function OutputArea({ input, setInput, output }) {
       {/* Output Section */}
       <Box mt={3}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '##4ec9b0' }}>
             Output
           </Typography>
           {output && (
