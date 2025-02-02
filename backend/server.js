@@ -9,6 +9,10 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+
+const JDOODLE_CLIENT_ID = process.env.JDOODLE_CLIENT_ID;
+const JDOODLE_CLIENT_SECRET = process.env.JDOODLE_CLIENT_SECRET;
+
 const app = express();
 const PORT = 5000;
 
@@ -298,57 +302,68 @@ app.delete('/api/files/:projectId/:fileName', async (req, res) => {
   }
 });
 
+const axios = require('axios');
+
 app.post('/api/run', async (req, res) => {
   const { projectId, fileName, input } = req.body;
 
   try {
-      const params = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: `${projectId}/${fileName}`,
-      };
+    // Fetch the file content from S3
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${projectId}/${fileName}`,
+    };
+    const data = await s3.getObject(params).promise();
+    const fileContent = data.Body.toString('utf-8');
 
-      const data = await s3.getObject(params).promise();
-      const fileContent = data.Body.toString('utf-8');
+    // Determine the language based on the file extension
+    const extension = path.extname(fileName);
+    let language;
+    switch (extension) {
+      case '.cpp':
+        language = 'cpp17'; // C++17
+        break;
+      case '.java':
+        language = 'java'; // Java
+        break;
+      case '.py':
+        language = 'python3'; // Python 3
+        break;
+      case '.js':
+        language = 'nodejs'; // JavaScript (Node.js)
+        break;
+      default:
+        return res.status(400).json({ error: 'Unsupported file type!' });
+    }
 
-      const filePath = path.join(projectsDir, projectId, fileName);
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-      fs.writeFileSync(filePath, fileContent);
+    // Prepare the request payload for JDoodle
+    const jdoodlePayload = {
+      clientId: JDOODLE_CLIENT_ID,
+      clientSecret: JDOODLE_CLIENT_SECRET,
+      script: fileContent,
+      language: language,
+      stdin: input || '',
+      versionIndex: '0', // Use the latest version of the language
+    };
 
-      const extension = path.extname(fileName);
-      let command = '';
+    // Make a POST request to JDoodle API
+    const jdoodleResponse = await axios.post('https://api.jdoodle.com/v1/execute', jdoodlePayload);
 
-      switch (extension) {
-          case '.cpp':
-              command = `g++ ${filePath} -o ${filePath}.out && ${filePath}.out`;
-              break;
-          case '.java':
-              command = `javac ${filePath} && java -cp ${path.dirname(filePath)} ${path.basename(fileName, '.java')}`;
-              break;
-          case '.py':
-              command = `python3 ${filePath}`;
-              break;
-          case '.js':
-              command = `node ${filePath}`;
-              break;
-          default:
-              return res.status(400).json({ error: 'Unsupported file type!' });
-      }
+    // Extract the response data
+    const { output, statusCode, error } = jdoodleResponse.data;
 
-      const child = exec(command, (error, stdout, stderr) => {
-          if (error) {
-              return res.status(500).json({ error: stderr });
-          }
-          res.status(200).json({ output: stdout });
-      });
-
-      child.stdin.write(input + "\n");
-      child.stdin.end();
+    if (statusCode === 200) {
+      // Success: Return the output
+      res.status(200).json({ output });
+    } else {
+      // Error: Return the error message
+      res.status(500).json({ error: error || 'Failed to execute code' });
+    }
   } catch (error) {
-      console.error(error);
-      res.status(404).json({ error: 'File not found!' });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to execute code' });
   }
 });
-
 
 // Start the server
 app.listen(PORT, () => {
