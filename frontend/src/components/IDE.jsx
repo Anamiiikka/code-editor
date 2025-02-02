@@ -11,8 +11,8 @@ import { css } from '@codemirror/lang-css';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { autocompletion } from '@codemirror/autocomplete';
-import { Button, TextField, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { Save, PlayArrow } from '@mui/icons-material';
+import { Button, TextField, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel, Drawer, IconButton } from '@mui/material';
+import { Save, PlayArrow, Close } from '@mui/icons-material';
 import './IDE.css';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -49,7 +49,9 @@ function IDE() {
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [aiFixes, setAiFixes] = useState('');
   const [aiDocs, setAiDocs] = useState('');
+  const [aiSnippet, setAiSnippet] = useState('');
   const [snippetDescription, setSnippetDescription] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const editorRef = useRef(null);
 
   const fileExtension = fileName.split('.').pop();
@@ -101,6 +103,7 @@ function IDE() {
     try {
       const response = await axios.post(`${backendUrl}/api/ai/lint`, { code });
       setAiFixes(response.data.fixes);
+      setIsSidebarOpen(true); // Open sidebar when AI fixes are available
     } catch (error) {
       console.error('Error fetching AI fixes:', error);
     }
@@ -111,6 +114,7 @@ function IDE() {
     try {
       const response = await axios.post(`${backendUrl}/api/ai/generate-docs`, { code });
       setAiDocs(response.data.docs);
+      setIsSidebarOpen(true); // Open sidebar when AI docs are available
     } catch (error) {
       console.error('Error generating AI docs:', error);
     }
@@ -122,7 +126,8 @@ function IDE() {
       const response = await axios.post(`${backendUrl}/api/ai/generate-snippet`, {
         description: snippetDescription,
       });
-      setCode(code + '\n' + response.data.snippet);
+      setAiSnippet(response.data.snippet); // Store snippet in state (not in editor)
+      setIsSidebarOpen(true); // Open sidebar when AI snippet is generated
     } catch (error) {
       console.error('Error generating AI snippet:', error);
     }
@@ -231,23 +236,57 @@ function IDE() {
             {output}
           </Typography>
         </Paper>
-        <Typography variant="h6" gutterBottom>
-          AI Linting Fixes
-        </Typography>
-        <Paper elevation={3} className="ai-output-paper">
-          <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
-            {aiFixes}
-          </Typography>
-        </Paper>
-        <Typography variant="h6" gutterBottom>
-          AI Documentation
-        </Typography>
-        <Paper elevation={3} className="ai-output-paper">
-          <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
-            {aiDocs}
-          </Typography>
-        </Paper>
       </Box>
+
+      {/* AI Sidebar */}
+      <Drawer
+        anchor="right"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        sx={{ width: '30%', flexShrink: 0 }}
+      >
+        <Box sx={{ width: '100%', padding: 2 }}>
+          <IconButton onClick={() => setIsSidebarOpen(false)} sx={{ marginBottom: 2 }}>
+            <Close />
+          </IconButton>
+          {aiFixes && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                AI Linting Fixes
+              </Typography>
+              <Paper elevation={3} className="ai-output-paper">
+                <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
+                  {aiFixes}
+                </Typography>
+              </Paper>
+            </>
+          )}
+          {aiDocs && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                AI Documentation
+              </Typography>
+              <Paper elevation={3} className="ai-output-paper">
+                <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
+                  {aiDocs}
+                </Typography>
+              </Paper>
+            </>
+          )}
+          {aiSnippet && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                AI Generated Snippet
+              </Typography>
+              <Paper elevation={3} className="ai-output-paper">
+                <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
+                  {aiSnippet}
+                </Typography>
+              </Paper>
+            </>
+          )}
+        </Box>
+      </Drawer>
     </Box>
   );
 }
