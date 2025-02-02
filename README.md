@@ -67,7 +67,7 @@ Codev is a collaborative code editor designed to provide developers with a seaml
 ## Directory Structure
 
 ```
-└── codedpool-code-editor/
+└── codedpool-codev/
     ├── backend/
     │   ├── controllers/        # Business logic for routes
     │   ├── middleware/         # Middleware functions (e.g., error handling)
@@ -101,8 +101,8 @@ Codev is a collaborative code editor designed to provide developers with a seaml
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/codedpool-code-editor.git
-   cd codedpool-code-editor
+   git clone https://github.com/codedpool/codev.git)
+   cd codedpool-codev
    ```
 
 2. Install dependencies for both backend and frontend:
