@@ -59,7 +59,8 @@ function IDE() {
 
       {/* File Actions (Bottom) */}
       <div className="file-actions-container">
-        <FileActions
+        <div className='file-actions'>
+         <FileActions
           saveFile={() => saveFile(code, projectId, fileName, backendUrl)}
           runCode={() =>
             runCode(code, input, projectId, fileName, backendUrl, setOutput, setIsRunning)
@@ -72,6 +73,8 @@ function IDE() {
           setSnippetDescription={setSnippetDescription}
           isRunning={isRunning}
         />
+        </div>
+        
       </div>
 
       {/* AI Sidebar */}
