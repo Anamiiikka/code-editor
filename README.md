@@ -202,4 +202,4 @@ This project is licensed under the **ISC License**. See the [LICENSE](LICENSE) f
 
 Feel free to customize this README further based on your project's specific needs!
 
-Created with 🧠 and ❤️ @ HAXPLORE-CODEFEST'25 by Team Phoenix Arcana 🐦‍🔥🦊
+Created with 🧠 and ❤️ @ HAXPLORE-CODEFEST'25 by Team Phoenix Arcana 🐦‍🔥🦊🐢
