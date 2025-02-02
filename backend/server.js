@@ -226,36 +226,33 @@ app.delete('/api/projects/:projectId', async (req, res) => {
 // API to create a new file
 app.post('/api/files', async (req, res) => {
   const { projectId, fileName, content } = req.body;
-
   if (!projectId || !fileName) {
     return res.status(400).json({ error: 'Project ID and file name are required!' });
   }
-
   try {
     const params = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `${projectId}/${fileName}`,
       Body: content || '',
     };
-
     await s3.upload(params).promise();
-
     // Update the project's files array in MongoDB
     const project = await Project.findOne({ projectId });
     if (!project) {
       return res.status(404).json({ error: 'Project not found!' });
     }
-
-    project.files.push({ fileName, content });
-    await project.save();
-
+    // Check if the file already exists in the files array
+    const fileExists = project.files.some((file) => file.fileName === fileName);
+    if (!fileExists) {
+      project.files.push({ fileName, content });
+      await project.save();
+    }
     res.status(201).json({ message: 'File created successfully!' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create file' });
   }
 });
-
 // API to get file content
 app.get('/api/files/:projectId/:fileName', async (req, res) => {
   const { projectId, fileName } = req.params;
