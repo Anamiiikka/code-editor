@@ -4,7 +4,6 @@ import Home from './components/Home';
 import IDE from './components/IDE';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 
-// Create a dark theme
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
