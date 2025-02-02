@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Button, TextField, Container, Typography, Box, Grid, Paper, List, ListItem, ListItemText,
-  IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Drawer, Toolbar, AppBar, Fab, Dialog, DialogTitle, DialogContent, DialogActions
+  IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Drawer, Toolbar, AppBar, Fab, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import { Add, Delete, Folder, Code, Menu as MenuIcon } from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -16,6 +16,8 @@ function Home() {
   const [fileName, setFileName] = useState('');
   const [fileType, setFileType] = useState('cpp');
   const [anchorEl, setAnchorEl] = useState(null);
+  
+  const[open,setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -23,7 +25,8 @@ function Home() {
   const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
+const[drawerWidth,setDrawerWidth] = useState(240);
+ 
   // Fetch all projects for the authenticated user
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -123,18 +126,33 @@ function Home() {
           <IconButton
             color="inherit"
             edge="start"
-            onClick={() => setDrawerOpen(!drawerOpen)}
+            onClick={() => setDrawerOpen(drawerWidth === 240?80:240)}
             sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Web IDE
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, 
+            fontFamily: 'sans-serif',
+          }}>
+            CODEV
           </Typography>
 
           {/* Auth0 Login/Logout Buttons */}
           {!isAuthenticated && (
-            <Button color="inherit" onClick={() => loginWithRedirect()}>
+            <Button 
+            variant='outlined'
+            color="inherit" 
+            onClick={() => loginWithRedirect()}
+            sx={{
+              backgroundColor: '#BBE613', 
+                color: 'black', 
+                borderRadius: '6px',
+                padding: '5px 15px',
+                transition: '0.3s', 
+                '&:hover': {
+                  backgroundColor: '#D4FF2A', 
+                },
+              }}>
               Log In
             </Button>
           )}
@@ -143,7 +161,20 @@ function Home() {
               <Typography variant="body1" sx={{ mr: 2 }}>
                 Welcome, {user.name}!
               </Typography>
-              <Button color="inherit" onClick={() => logout()}>
+              <Button 
+              variant='outlined'
+              color="inherit" 
+              onClick={() => logout()}
+              sx={{
+                backgroundColor: '#BBE613', 
+                color: 'black', 
+                borderRadius: '6px',
+                padding: '5px 15px',
+                transition: '0.3s', 
+                '&:hover': {
+                  backgroundColor: '#D4FF2A', 
+                },
+               }}>
                 Log Out
               </Button>
             </>
@@ -153,12 +184,17 @@ function Home() {
 
       {/* Sidebar */}
       <Drawer
-        variant="permanent"
+        variant={ "permanent"}
         sx={{
-          width: 240,
+          width: drawerWidth, 
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
+          [`& .MuiDrawer-paper`]: {
+            width: drawerWidth, 
+            boxSizing: "border-box",
+            transition: "width 0.3s ease-in-out", 
+          },
         }}
+       
       >
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
@@ -190,9 +226,13 @@ function Home() {
             <Box mb={2} display="flex" alignItems="center" gap={2}>
               <Button
                 variant="contained"
-                color="secondary"
+                color = "inherit"
                 startIcon={<Add />}
                 onClick={(e) => setAnchorEl(e.currentTarget)}
+                sx={{ 
+                   backgroundColor: '#BBE613',
+                   color: 'black',
+                 }}
               >
                 Create File
               </Button>
@@ -222,7 +262,10 @@ function Home() {
                       <MenuItem value="js">JavaScript</MenuItem>
                     </Select>
                   </FormControl>
-                  <Button variant="contained" color="primary" onClick={createFile}>
+                  <Button variant="contained" color="primary" onClick={createFile}
+                  sx={{
+                    backgroundColor: '#BBE613',
+                  }}>
                     Create
                   </Button>
                 </Box>
@@ -256,7 +299,9 @@ function Home() {
       <Fab
         color="primary"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{ position: 'fixed', bottom: 16, right: 16, 
+          backgroundColor: '#BBE613',
+        }}
         onClick={() => setCreateProjectDialogOpen(true)}
       >
         <Add />
@@ -266,9 +311,32 @@ function Home() {
       <Dialog
         open={createProjectDialogOpen}
         onClose={() => setCreateProjectDialogOpen(false)}
+        sx={{
+          '& .MuiDialog-paper': {
+            maxWidth: '400px',
+            padding: '16px',
+            borderRadius: '12px',
+            boxShadow: '0px 4px 10px rgba(32, 32, 32, 0.1)',
+            margin: 'auto',
+        },
+        }}
       >
-        <DialogTitle>Create New Project</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+         sx={{
+          fontSize: '1.5rem',
+          fontWeight: '600',
+          color: 'white', 
+          paddingBottom: '16px',
+          fontFamily: 'sans-serif',
+        }}>
+          Create New Project
+          </DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+          }}>
           <TextField
             autoFocus
             margin="dense"
@@ -276,11 +344,52 @@ function Home() {
             fullWidth
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+              },
+              '& .MuiInputLabel-root': {
+                color: '#5f6368', // Softer label color
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateProjectDialogOpen(false)}>Cancel</Button>
-          <Button onClick={createProject}>Create</Button>
+        <DialogActions
+         sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          paddingTop: '12px',
+        }}>
+           <Button
+      onClick={() => setCreateProjectDialogOpen(false)}
+      variant="outlined"
+      color="secondary"
+      sx={{
+        padding: '6px 16px',
+        fontWeight: '500',
+        borderRadius: '8px',
+        '&:hover': {
+          backgroundColor: '#f1f1f1',
+        },
+      }}
+    >
+      Cancel
+    </Button>
+    <Button
+      onClick={createProject}
+      variant="contained"
+      color="primary"
+      sx={{
+        padding: '6px 16px',
+        fontWeight: '500',
+        borderRadius: '8px',
+        marginLeft: '8px',
+        backgroundColor: '#BBE613',
+        '&:hover': {
+          backgroundColor: '#D4FF2A',
+        },
+      }}>Create
+      </Button>
         </DialogActions>
       </Dialog>
     </Box>
