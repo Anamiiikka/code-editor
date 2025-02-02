@@ -184,20 +184,61 @@ function IDE() {
             syntaxHighlighting: true,
           }}
         />
-        <Box className="button-container">
-          <Button variant="contained" color="primary" startIcon={<Save />} onClick={saveFile}>
-            Save File
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<PlayArrow />}
-            onClick={runCode}
-            disabled={isRunning}
-          >
-            {isRunning ? 'Running...' : 'Run Code'}
-          </Button>
-          <Button onClick={fetchAiFixes}>AI Lint</Button>
+        <Box className="button-container" sx={{ display: 'flex', gap: 2, p: 2 }}>
+  {/* Save File Button */}
+<Button
+  variant="contained"
+  color="primary"
+  startIcon={<Save />}
+  onClick={saveFile}
+  sx={{
+    textTransform: 'none',
+    padding: '8px 16px',
+    fontWeight: 500,
+    fontSize: '14px',
+    borderRadius: 4,
+    backgroundColor: '#007ACC',
+    '&:hover': {
+      backgroundColor: '#006C9D',
+      boxShadow: 'none',
+    },
+    '&:active': {
+      backgroundColor: '#005F8D',
+    },
+    width: '200px', // Increase width here
+  }}
+>
+  Save File
+</Button>
+
+{/* Run Code Button */}
+<Button
+  variant="contained"
+  color="secondary"
+  startIcon={<PlayArrow />}
+  onClick={runCode}
+  disabled={isRunning}
+  sx={{
+    textTransform: 'none',
+    padding: '8px 16px',
+    fontWeight: 500,
+    fontSize: '14px',
+    borderRadius: 4,
+    backgroundColor: isRunning ? '#555' : '#28A745',
+    '&:hover': {
+      backgroundColor: isRunning ? '#444' : '#218838',
+      boxShadow: 'none',
+    },
+    '&:active': {
+      backgroundColor: isRunning ? '#333' : '#1E7E34',
+    },
+    width: '200px', // Increase width here
+  }}
+>
+  {isRunning ? 'Running...' : 'Run Code'}
+</Button>
+
+  <Button onClick={fetchAiFixes}>AI Lint</Button>
           <Button onClick={generateAiDocs}>Generate Docs</Button>
           <TextField
             label="Describe the code snippet you need"
@@ -212,31 +253,45 @@ function IDE() {
           <Button onClick={generateAiSnippet}>Generate Snippet</Button>
         </Box>
       </Box>
-
       {/* Output and Input Area */}
-      <Box className="output-container">
-        <Typography variant="h6" gutterBottom>
-          Input
-        </Typography>
-        <TextField
-          label="Enter input (if required)"
-          variant="outlined"
-          multiline
-          rows={4}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <Typography variant="h6" gutterBottom>
-          Output
-        </Typography>
-        <Paper elevation={3} className="output-paper">
-          <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
-            {output}
-          </Typography>
-        </Paper>
-      </Box>
+<Box className="output-container" sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+    Input
+  </Typography>
+  <TextField
+    label="Enter input (if required)"
+    variant="outlined"
+    multiline
+    rows={4}
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    fullWidth
+    margin="normal"
+    sx={{
+      borderRadius: 2,
+      '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+          borderColor: 'grey.400',
+        },
+        '&:hover fieldset': {
+          borderColor: 'primary.main',
+        },
+      },
+    }}
+  />
+  
+  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+    Output
+  </Typography>
+  
+  {/* Black Background Output Section */}
+  <Paper elevation={3} className="output-paper" sx={{ p: 2, borderRadius: 2, backgroundColor: '#000', color: '#fff' }}>
+    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {output}
+    </Typography>
+  </Paper>
+</Box>
+
 
       {/* AI Sidebar */}
       <Drawer
