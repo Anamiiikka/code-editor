@@ -67,8 +67,9 @@ function OutputArea({ input, setInput, output }) {
 
   return (
     <OutputContainer>
+      
       {/* Input Section */}
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '##4ec9b0' }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#ffffff' }}>
         Input
       </Typography>
       <StyledTextField

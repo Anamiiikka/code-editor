@@ -2,13 +2,15 @@
 :root {
   --bg-color: #00000; /* Dark background */
   --text-color: #fff; /* Light text */
-  --accent-color: #007acc; /* Accent color for buttons and highlights */
-  --hover-color: #005a9c; /* Hover color for buttons */
+  --accent-color: #fff; /* Accent color for buttons and highlights */
+  --hover-color: #E6FF84; /* Hover color for buttons */
   --border-color: #333; /* Border color for containers */
-  --sidebar-bg: #252526; /* Sidebar background */
-  --code-editor-bg: #1e1e1e; /* Code editor background */
+  --sidebar-bg: #2d2d2d; /* Sidebar background */
+  --code-editor-bg: #2d2d2d; /* Code editor background */
   --io-bg: #2d2d2d; /* Input/Output background */
 }
+
+
 
 body {
   margin: 0;
@@ -21,6 +23,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+ 
 }
 
 /* Navbar */
@@ -47,19 +50,54 @@ body {
 }
 
 .editor-container {
-  flex: 1;
+  flex: 1; /* Takes available space */
   padding: 1rem;
-  border-right: 1px solid var(--border-color);
+  border: 1px solid var(--border-color); /* Border around the box */
   background-color: var(--code-editor-bg);
-  overflow-y: auto;
+  /* border-radius: 8px; Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Light shadow for the box */
+  
+  /* height: 500px; Fixed height for the box */
+  max-height: 100vh; /* Limits height to 80% of viewport */
+  
+  overflow-y: auto; /* Enables scrolling */
+  overflow-x: hidden; /* Prevents horizontal scroll */
+  
+  /* Custom Scrollbar Styling */
+  scrollbar-width: thin;
+  scrollbar-color: #888 #2e2e2e;
 }
+
+
+
+.editor-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-container::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.editor-container::-webkit-scrollbar-track {
+  background-color: #2e2e2e;
+}
+
+.css-18hgfmu{
+  height: 90%;
+  
+}
+
 
 .io-container {
   flex: 1;
   padding: 1rem;
   background-color: var(--io-bg);
   overflow-y: auto;
+ 
 }
+
+
 
 /* File Actions */
 .file-actions-container {
@@ -68,7 +106,7 @@ body {
   left: 0;
   width: 100%;
   height: 60px;
-  background-color: var(--bg-color);
+  /* background-color: #2d2d2d; */
   padding: 0 1rem;
   border-top: 1px solid var(--border-color);
   flex-direction: row;

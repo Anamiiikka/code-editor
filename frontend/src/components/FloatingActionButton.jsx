@@ -15,7 +15,7 @@ function FloatingActionButton({ onClick }) {
         backgroundColor: '#BBE613', // Consistent with FileExplorer theme
         color: 'black', // Black icon for contrast
         '&:hover': {
-          backgroundColor: '#A8D800', // Slightly darker on hover
+          backgroundColor: '#D4FF2A', // Slightly darker on hover
           transform: 'scale(1.1)', // Slight scaling effect
           transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
         },

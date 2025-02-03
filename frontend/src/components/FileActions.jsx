@@ -10,7 +10,7 @@ const ActionsContainer = styled(Box)(({ theme }) => ({
   left: 0,
   width: '100%',
   height: '60px',
-  backgroundColor: '#1E1E1E',
+  backgroundColor: '#000',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -41,7 +41,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
   color: '#FFFFFF',
   backgroundColor: '#BBE613',
   '&:hover': {
-    backgroundColor: '#005F99',
+    backgroundColor: '#D4FF2A',
   },
   '&.Mui-disabled': {
     backgroundColor: '#444',

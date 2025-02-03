@@ -119,12 +119,18 @@ function CodeEditor({ code, setCode, aiSuggestions, setAiSuggestions, fileExtens
         extensions={[languageMap[fileExtension], aiAutocompletion]}
         onChange={(value) => setCode(value)}
         style={{
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          transition: 'box-shadow 0.3s ease',
-          '&:hover': {
-            boxShadow: '0 6px 10px rgba(0, 0, 0, 0.15)',
+          border: theme === 'dark' ? '1px solid #555' : '1px solid #ddd',
+    borderRadius: '8px',
+    backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff',
+    color: theme === 'dark' ? '#dcdcdc' : '#000',
+    boxShadow: theme === 'dark'
+      ? '0 4px 8px rgba(0, 0, 0, 0.4)'
+      : '0 4px 6px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      boxShadow: theme === 'dark'
+        ? '0 6px 12px rgba(0, 0, 0, 0.5)'
+        : '0 6px 10px rgba(0, 0, 0, 0.15)',
           },
         }}
       />
