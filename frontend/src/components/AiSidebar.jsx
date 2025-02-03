@@ -24,7 +24,7 @@ const SidebarContainer = styled(Box)(({ theme }) => ({
 const SectionHeader = styled(Typography)(({ theme }) => ({
   fontWeight: 600,
   marginBottom: '8px',
-  color: '#c792ea', // Purple accent for headers
+  color: '#BBE613', 
 }));
 
 const StyledPre = styled('pre')(({ theme }) => ({
@@ -34,7 +34,9 @@ const StyledPre = styled('pre')(({ theme }) => ({
   borderRadius: '8px',
   fontSize: '14px',
   overflowX: 'auto',
-  maxHeight: '200px',
+  // overflowY: 'scroll',
+ 
+  // height: '90vh',
   scrollbarWidth: 'thin',
   '&::-webkit-scrollbar': {
     width: '8px',

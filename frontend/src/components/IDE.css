@@ -40,6 +40,7 @@ body {
 .file-name {
   margin: 0;
   font-weight: bold;
+ 
 }
 
 /* Main Content Area */
@@ -100,22 +101,7 @@ body {
 
 
 /* File Actions */
-.file-actions-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  /* background-color: #2d2d2d; */
-  padding: 0 1rem;
-  border-top: 1px solid var(--border-color);
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1000;
-  
-  
-}
+
 .file-actions {
   display: flex;
   align-items: center; /* Align buttons properly */
@@ -169,7 +155,7 @@ body {
 
 .ai-sidebar p {
   color: var(--text-color);
-  height: auto;
+  height: 100vh;
 }
 
 /* Scrollbars */

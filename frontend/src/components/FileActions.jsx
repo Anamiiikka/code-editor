@@ -17,18 +17,37 @@ const ActionsContainer = styled(Box)(({ theme }) => ({
   padding: '0 16px',
   boxShadow: '0px -2px 10px rgba(0, 0, 0, 0.3)',
   zIndex: 1000,
+
+  [`@media (max-width: 600px)`]: {
+    flexDirection: 'column',
+    height: 'auto',
+    padding: '8px 16px',
+    gap: '8px',
+  },
 }));
 
 
 const LeftContainer = styled(Box)({
   display: 'flex',
   gap: '12px',
+  [`@media (max-width: 600px)`]: {
+    flexDirection: 'column',
+    gap: '8px',
+    width: '100%',
+    alignItems: 'center',
+  },
 });
 
 const RightContainer = styled(Box)({
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
+  [`@media (max-width: 600px)`]: {
+    flexDirection: 'column',
+    gap: '8px',
+    width: '100%',
+    alignItems: 'center',
+  },
 });
 
 // 🔹 Styled Buttons
