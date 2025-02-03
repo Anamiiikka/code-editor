@@ -35,11 +35,11 @@ Codev is a collaborative code editor designed to provide developers with a seaml
 
 ## Features
 
-- **Real-Time Collaboration**: Collaborate with others in real-time using WebSockets.
 - **AI-Powered Assistance**: Get code completions, linting suggestions, documentation generation, and code snippets using AI.
 - **File Management**: Create, read, update, and delete files within projects.
 - **Code Execution**: Run code in multiple languages (C++, Java, Python, JavaScript) using JDoodle API.
 - **Project Management**: Create, list, and delete projects.
+- **Real-Time Collaboration**: Collaborate with others in real-time using WebSockets.
 - **Cloud Storage**: Files are stored in AWS S3 for persistence.
 - **Authentication**: User authentication via Auth0.
 
