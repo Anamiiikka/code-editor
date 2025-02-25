@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
-import CodeMirror from '@uiw/react-codemirror';
+// frontend/src/components/CodeEditor.jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import * as Y from 'yjs';
+import { yCollab } from 'y-codemirror.next';
+import { EditorView, basicSetup } from 'codemirror';
+import { EditorState } from '@codemirror/state';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
@@ -8,20 +12,11 @@ import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { autocompletion } from '@codemirror/autocomplete';
-import axios from 'axios';
-import {
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  CircularProgress,
-  Tooltip,
-  Box,
-  Typography,
-} from '@mui/material';
+import { LiveblocksYjsProvider } from '@liveblocks/yjs'; // Import Yjs provider
+import { useRoom } from '../liveblocks.config';
+import { Box, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
 
-// Language Mapping for Proper Syntax Highlighting
+// Language Mapping
 const languageMap = {
   js: javascript(),
   ts: javascript(),
@@ -43,40 +38,72 @@ const themes = [
   { value: 'oneDark', label: 'One Dark' },
 ];
 
-function CodeEditor({ code, setCode, aiSuggestions, setAiSuggestions, fileExtension, backendUrl }) {
+function CodeEditor({ code, setCode, fileExtension, backendUrl, projectId, fileName }) {
   const [theme, setTheme] = useState('oneDark');
-  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const [element, setElement] = useState(null);
+  const room = useRoom();
 
-  // Fetch AI Auto-Completion Suggestions
-  const fetchAutoCompleteSuggestions = async (code) => {
-    setIsFetchingSuggestions(true);
-    try {
-      const response = await axios.post(`${backendUrl}/api/ai/auto-complete`, { code });
-      setAiSuggestions(response.data.suggestions);
-    } catch (error) {
-      console.error('Error fetching AI suggestions:', error);
-    } finally {
-      setIsFetchingSuggestions(false);
-    }
-  };
+  const ref = useCallback((node) => {
+    if (!node) return;
+    setElement(node);
+  }, []);
 
-  // AI Auto-Completion Extension
-  const aiAutocompletion = autocompletion({
-    override: [
-      async (context) => {
-        const code = context.state.doc.toString();
-        await fetchAutoCompleteSuggestions(code);
-        return {
-          from: context.pos,
-          options: aiSuggestions.map((suggestion) => ({ label: suggestion, type: 'text' })),
-        };
-      },
-    ],
-  });
+  useEffect(() => {
+    if (!element || !room) return;
+
+    // Initialize Yjs document
+    const yDoc = new Y.Doc();
+    const yText = yDoc.getText('codemirror');
+    const undoManager = new Y.UndoManager(yText);
+
+    // Set up Liveblocks Yjs provider
+    const yProvider = new LiveblocksYjsProvider(room, yDoc);
+    yProvider.connect();
+
+    // Fetch initial content from backend
+    const fetchInitialContent = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/files/${projectId}/${fileName}`);
+        const data = await response.json();
+        if (yText.length === 0) { // Only set initial content if empty
+          yText.insert(0, data.content);
+        }
+      } catch (error) {
+        console.error('Error fetching initial content:', error);
+      }
+    };
+    fetchInitialContent();
+
+    // Set up CodeMirror
+    const state = EditorState.create({
+      doc: yText.toString(),
+      extensions: [
+        basicSetup,
+        languageMap[fileExtension] || javascript(),
+        yCollab(yText, yProvider.awareness, { undoManager }),
+        theme === 'oneDark' ? oneDark : [],
+      ],
+    });
+
+    const view = new EditorView({
+      state,
+      parent: element,
+    });
+
+    // Sync changes to parent state
+    yText.observe(() => {
+      const newCode = yText.toString();
+      setCode(newCode);
+    });
+
+    return () => {
+      view.destroy();
+      yProvider.destroy(); // Use destroy instead of disconnect
+    };
+  }, [element, room, fileExtension, theme, backendUrl, projectId, fileName, setCode]);
 
   return (
-    <Box className="code-editor" sx={{ padding: '16px', backgroundColor: '#000000', borderRadius: '8px' }}>
-      {/* Theme Selector */}
+    <Box sx={{ padding: '16px', backgroundColor: '#1e1e1e', borderRadius: '8px' }}>
       <FormControl fullWidth sx={{ marginBottom: '16px' }}>
         <InputLabel id="theme-selector-label">Editor Theme</InputLabel>
         <Select
@@ -84,14 +111,6 @@ function CodeEditor({ code, setCode, aiSuggestions, setAiSuggestions, fileExtens
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
           label="Editor Theme"
-          sx={{
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#ccc',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#aaa',
-            },
-          }}
         >
           {themes.map((themeOption) => (
             <MenuItem key={themeOption.value} value={themeOption.value}>
@@ -100,47 +119,10 @@ function CodeEditor({ code, setCode, aiSuggestions, setAiSuggestions, fileExtens
           ))}
         </Select>
       </FormControl>
-
-      {/* Loading Indicator for AI Suggestions */}
-      {isFetchingSuggestions && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <CircularProgress size={20} />
-          <Typography variant="caption" sx={{ marginLeft: '8px', color: '#555' }}>
-            Fetching AI suggestions...
-          </Typography>
-        </Box>
-      )}
-
-      {/* CodeMirror Editor */}
-      <CodeMirror
-        value={code}
-        height="500px"
-        theme={theme === 'oneDark' ? oneDark : theme}
-        extensions={[languageMap[fileExtension], aiAutocompletion]}
-        onChange={(value) => setCode(value)}
-        style={{
-          border: theme === 'dark' ? '1px solid #555' : '1px solid #ddd',
-    borderRadius: '8px',
-    backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff',
-    color: theme === 'dark' ? '#dcdcdc' : '#000',
-    boxShadow: theme === 'dark'
-      ? '0 4px 8px rgba(0, 0, 0, 0.4)'
-      : '0 4px 6px rgba(0, 0, 0, 0.1)',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-      boxShadow: theme === 'dark'
-        ? '0 6px 12px rgba(0, 0, 0, 0.5)'
-        : '0 6px 10px rgba(0, 0, 0, 0.15)',
-          },
-        }}
-      />
-
-      {/* Tooltip for Theme Options */}
-      <Tooltip title="Choose a theme for better readability">
-        <Typography variant="caption" sx={{ marginTop: '8px', color: '#777', display: 'block' }}>
-          Tip: Select a theme that suits your preference.
-        </Typography>
-      </Tooltip>
+      <div ref={ref} style={{ height: '500px', overflow: 'auto' }} />
+      <Typography variant="caption" sx={{ marginTop: '8px', color: '#777', display: 'block' }}>
+        Tip: Collaborate in real-time with others!
+      </Typography>
     </Box>
   );
 }

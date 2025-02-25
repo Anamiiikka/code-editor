@@ -1,3 +1,4 @@
+// frontend/src/components/IDE.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -5,6 +6,7 @@ import CodeEditor from './CodeEditor';
 import FileActions from './FileActions';
 import AiSidebar from './AiSidebar';
 import OutputArea from './OutputArea';
+import { ClientSideSuspense } from '@liveblocks/react/suspense';
 import './IDE.css';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -15,81 +17,66 @@ function IDE() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
   const [aiFixes, setAiFixes] = useState('');
   const [aiDocs, setAiDocs] = useState('');
   const [aiSnippet, setAiSnippet] = useState('');
   const [snippetDescription, setSnippetDescription] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Fetch file content when the component mounts
-  useEffect(() => {
-    axios
-      .get(`${backendUrl}/api/files/${projectId}/${fileName}`)
-      .then((response) => setCode(response.data.content))
-      .catch((error) => console.error('Error fetching file:', error));
-  }, [projectId, fileName]);
+  // Dynamic room ID based on projectId and fileName
+  const roomId = `${projectId}-${fileName}`;
 
   return (
     <div className="ide-container">
-      {/* Navbar with File Name */}
       <nav className="navbar">
         <h1 className="file-name">{fileName}</h1>
       </nav>
-
-      {/* Main Content Area */}
-      <div className="main-content">
-        {/* Code Editor (Left Half) */}
-        <div className="editor-container">
-          <CodeEditor
-            code={code}
-            setCode={setCode}
-            aiSuggestions={aiSuggestions}
-            setAiSuggestions={setAiSuggestions}
-            fileExtension={fileName.split('.').pop()}
-            backendUrl={backendUrl}
-          />
+      <ClientSideSuspense fallback={<div>Loading collaboration...</div>}>
+        <div className="main-content">
+          <div className="editor-container">
+            <CodeEditor
+              code={code}
+              setCode={setCode}
+              fileExtension={fileName.split('.').pop()}
+              backendUrl={backendUrl}
+              projectId={projectId}
+              fileName={fileName}
+            />
+          </div>
+          <div className="io-container">
+            <OutputArea input={input} setInput={setInput} output={output} />
+          </div>
         </div>
-
-        {/* Input/Output Area (Right Half) */}
-        <div className="io-container">
-          <OutputArea input={input} setInput={setInput} output={output} />
+        <div className="file-actions-container">
+          <div className="file-actions">
+            <FileActions
+              saveFile={() => saveFile(code, projectId, fileName, backendUrl)}
+              runCode={() =>
+                runCode(code, input, projectId, fileName, backendUrl, setOutput, setIsRunning)
+              }
+              fetchAiFixes={() => fetchAiFixes(code, backendUrl, setAiFixes, setIsSidebarOpen)}
+              generateAiDocs={() => generateAiDocs(code, backendUrl, setAiDocs, setIsSidebarOpen)}
+              generateAiSnippet={() =>
+                generateAiSnippet(snippetDescription, backendUrl, setAiSnippet, setIsSidebarOpen)
+              }
+              setSnippetDescription={setSnippetDescription}
+              isRunning={isRunning}
+            />
+          </div>
         </div>
-      </div>
-
-      {/* File Actions (Bottom) */}
-      <div className="file-actions-container">
-        <div className='file-actions'>
-         <FileActions
-          saveFile={() => saveFile(code, projectId, fileName, backendUrl)}
-          runCode={() =>
-            runCode(code, input, projectId, fileName, backendUrl, setOutput, setIsRunning)
-          }
-          fetchAiFixes={() => fetchAiFixes(code, backendUrl, setAiFixes, setIsSidebarOpen)}
-          generateAiDocs={() => generateAiDocs(code, backendUrl, setAiDocs, setIsSidebarOpen)}
-          generateAiSnippet={() =>
-            generateAiSnippet(snippetDescription, backendUrl, setAiSnippet, setIsSidebarOpen)
-          }
-          setSnippetDescription={setSnippetDescription}
-          isRunning={isRunning}
+        <AiSidebar
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          aiFixes={aiFixes}
+          aiDocs={aiDocs}
+          aiSnippet={aiSnippet}
         />
-        </div>
-        
-      </div>
-
-      {/* AI Sidebar */}
-      <AiSidebar
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        aiFixes={aiFixes}
-        aiDocs={aiDocs}
-        aiSnippet={aiSnippet}
-      />
+      </ClientSideSuspense>
     </div>
   );
 }
 
-// Helper Functions
+// Helper Functions (unchanged)
 const saveFile = async (code, projectId, fileName, backendUrl) => {
   try {
     await axios.post(`${backendUrl}/api/files`, { projectId, fileName, content: code });
@@ -102,7 +89,7 @@ const saveFile = async (code, projectId, fileName, backendUrl) => {
 const runCode = async (code, input, projectId, fileName, backendUrl, setOutput, setIsRunning) => {
   setIsRunning(true);
   try {
-    await saveFile(code, projectId, fileName, backendUrl); // Save before running
+    await saveFile(code, projectId, fileName, backendUrl);
     const response = await axios.post(`${backendUrl}/api/run`, { projectId, fileName, input });
     setOutput(response.data.output);
   } catch (error) {
