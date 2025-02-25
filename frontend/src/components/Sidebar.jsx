@@ -43,27 +43,27 @@ function Sidebar({ drawerOpen, projects, selectedProject, setSelectedProject, de
               justifyContent: 'space-between',
               whiteSpace: 'nowrap', // Prevent text wrapping
               padding: '8px 16px', // Adjust padding for better spacing
-              borderRadius: '8px', // Rounded corners for a modern look
+              borderRadius: '4px', // Rounded corners for a modern look
               margin: '4px 8px', // Add spacing between items
-              backgroundColor: selectedProject?.projectId === project.projectId ? '#f0f0f0' : 'transparent', // Highlight selected project
               transition: 'background-color 0.2s, transform 0.2s', // Smooth transitions
               '&:hover': {
-                backgroundColor: '#e0e0e0', // Light gray on hover
-                transform: 'scale(1.02)', // Slight scaling effect
-              },
+               backgroundColor: 'rgba(255, 255, 255, 0.07)', // Brighter on hover
+              transform: 'scale(1.03)', // Slight scaling effect
+              cursor: 'pointer'
+},
             }}
           >
             {/* Folder Icon */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Folder sx={{ color: '#FFA726', marginRight: 1 }} /> {/* Orange folder icon */}
+              <Folder sx={{ color: '#E9E9E9', marginRight: 1 }} /> 
               {drawerOpen && ( // Only show text if the sidebar is expanded
                 <ListItemText
                   primary={
                     <Typography
                       variant="body1"
                       sx={{
-                        fontWeight: selectedProject?.projectId === project.projectId ? 'bold' : 'normal',
-                        color: selectedProject?.projectId === project.projectId ? '#000' : '#333',
+                        // fontWeight: selectedProject?.projectId === project.projectId ? 'bold' : 'normal',
+                        // color: selectedProject?.projectId === project.projectId ? '#fff' : '#333',
                       }}
                     >
                       {project.projectName}
@@ -81,7 +81,7 @@ function Sidebar({ drawerOpen, projects, selectedProject, setSelectedProject, de
                   deleteProject(project.projectId);
                 }}
                 size="small"
-                sx={{ color: 'red' }}
+                sx={{ color: '#E0FF66' }}
               >
                 <Delete fontSize="small" />
               </IconButton>

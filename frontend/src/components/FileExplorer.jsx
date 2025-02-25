@@ -76,24 +76,35 @@ function FileExplorer({ selectedProject, files, setFiles, backendUrl }) {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 3,maxWidth: 500 }}>
       {/* Create File Button */}
+      
       <Button
         onClick={(e) => setAnchorEl(e.currentTarget)}
         variant="contained"
         startIcon={<Code />}
         sx={{
-          backgroundColor: '#BBE613',
+          backgroundColor: '#E0FF66',
           color: 'black',
-          '&:hover': { backgroundColor: '#A8D800' },
+          '&:hover': { backgroundColor: '#CDF823' },
         }}
       >
         Create File
       </Button>
 
       {/* Create File Menu */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-        <Box sx={{ p: 2, minWidth: 300 }}>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}
+        sx={{
+          '& .MuiPaper-root': {
+            background: 'rgba(255, 255, 255, 0.1)', // Glass effect
+            backdropFilter: 'blur(20px)',
+            borderRadius: '10px',
+            marginTop: '10px',
+            padding: '16px',
+            minWidth: '400px',
+          },
+        }}>
+        <Box sx={{ p: 4,minWidth: 400,m: 2 }}>
           <TextField
             label="File Name"
             value={fileName}
@@ -116,7 +127,7 @@ function FileExplorer({ selectedProject, files, setFiles, backendUrl }) {
             onClick={createFile}
             variant="contained"
             fullWidth
-            sx={{ backgroundColor: '#007ACC', color: 'white' }}
+            sx={{ backgroundColor: '#E0FF66', color: 'black' }}
           >
             Create
           </Button>
@@ -161,7 +172,7 @@ function FileExplorer({ selectedProject, files, setFiles, backendUrl }) {
                     deleteFile(file);
                   }}
                   size="small"
-                  sx={{ color: 'red' }}
+                  sx={{ color: '#E6FF84' }}
                 >
                   <Delete fontSize="small" />
                 </IconButton>

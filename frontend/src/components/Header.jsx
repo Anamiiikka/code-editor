@@ -24,7 +24,7 @@ function Header({ drawerOpen, setDrawerOpen }) {
           CODEV
         </Typography>
         {/* Auth0 Login/Logout Buttons */}
-        {!isAuthenticated && (
+        {/* {!isAuthenticated && (
           <Button
             onClick={() => loginWithRedirect()}
             sx={{
@@ -40,7 +40,7 @@ function Header({ drawerOpen, setDrawerOpen }) {
           >
             Log In
           </Button>
-        )}
+        )} */}
         {isAuthenticated && (
           <>
             <Typography variant="body1" sx={{ marginRight: 2 }}>
@@ -49,7 +49,7 @@ function Header({ drawerOpen, setDrawerOpen }) {
             <Button
               onClick={() => logout()}
               sx={{
-                backgroundColor: '#BBE613',
+                backgroundColor: '#E0FF66',
                 color: 'black',
                 borderRadius: '6px',
                 padding: '5px 15px',

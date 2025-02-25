@@ -5,6 +5,7 @@ import { Add } from '@mui/icons-material';
 function FloatingActionButton({ onClick }) {
   return (
     <Fab
+      variant='extended'
       color="primary"
       aria-label="add"
       onClick={onClick}
@@ -12,7 +13,7 @@ function FloatingActionButton({ onClick }) {
         position: 'fixed',
         bottom: 16,
         right: 16,
-        backgroundColor: '#BBE613', // Consistent with FileExplorer theme
+        backgroundColor: '#E0FF66', // Consistent with FileExplorer theme
         color: 'black', // Black icon for contrast
         '&:hover': {
           backgroundColor: '#D4FF2A', // Slightly darker on hover
@@ -25,7 +26,8 @@ function FloatingActionButton({ onClick }) {
         },
       }}
     >
-      <Add />
+     <Add sx={{ marginRight: 1 }} />
+    CREATE PROJECT 
     </Fab>
   );
 }

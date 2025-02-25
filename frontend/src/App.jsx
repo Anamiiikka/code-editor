@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './components/Home';
 import IDE from './components/IDE';
+import Homepage from './components/Homepage';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 
 const darkTheme = createTheme({
@@ -16,7 +17,8 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Homepage />} />
+          <Route path="/dashboard" element={<Home />} />
           <Route path="/ide/:projectId/:fileName" element={<IDE />} />
         </Routes>
       </Router>
